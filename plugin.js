@@ -1,11 +1,16 @@
 'use strict';
 /* global $ */
 /* global inject */
+
 $(function(){
 
   $.fn.ngBrowserTrigger = function(eventType) {
 
     var element = this[0];
+
+    if (!element) {
+      throw 'element cannot simulate event:' + eventType;
+    }
 
     if (document.createEvent) {
       
@@ -22,16 +27,23 @@ $(function(){
 
   };
 
-  $.fn.ngClickLink = function() {
+  $.fn.ngClickLink = $.fn.$click = function() {
+
     var element = this;
+
     var href = element.attr('href');
+
+    if (!element || !href){
+      throw 'cannot simulate click link on element';
+    }
+
     element.scope().$apply(inject(function($location){
       element.click();
       $location.path(href);
     }));
   };
 
-  $.fn.ngTypeOn = function(string) {
+  $.fn.ngTypeOn = $.fn.$type = function(string) {
 
     this.val(string);
     this.ngBrowserTrigger('input');
