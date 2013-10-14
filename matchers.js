@@ -59,6 +59,10 @@ beforeEach(function() {
       return jasmine.Matchers.prototype.toEqual.call(this, expected);
     },
 
+    to$Equal: function(expected) {
+      return angular.equals(this.actual, expected);
+    },
+
     toEqualData: function(expected) {
       return angular.equals(this.actual, expected);
     },
