@@ -21,6 +21,25 @@ formElement.$type('enter this text into the input form element');
 linkElement.$click() # simpulates a click on a link using on-page routing
 ```
 
+It will also provide a pseudo HEREDOC facility, which is helpful for writing in-line HTML in your tests during tdd driving.  This should not be used in "production" tests, as it will not work with FIREFOX and a number of old-school browsers.  Still, I have found it very helpful in driving out code before pushing the body of the HTML to an include file in angularjs development.
+
+```js
+var app;
+beforeEach(inject(function($compile, $rootScope){
+   app = $compile(HEREDOC(function({/*
+
+     <div>
+       <div class="rolls-display"></div>
+       <div class="rolls" ng-click="rollsDisplay='-'"></div>
+       <div class="reset" ng-click="rollsDisplay=''"></div>
+     </div>
+
+   */
+   }))($rootScope);
+   $rootScope.$digest();
+}));
+```
+
 Finally, a number of angular-specific jasmine matchers are provided:
 
 ```js
