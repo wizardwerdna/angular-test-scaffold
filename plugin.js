@@ -43,7 +43,7 @@ $(function(){
     }));
   };
 
-  $.fn.ngTypeOn = $.fn.$type = function(string) {
+  $.fn.ngTypeOn = $.fn.$type = $.fn.$enter = $.fn.enter = function(string) {
 
     this.val(string);
     this.ngBrowserTrigger('input');
