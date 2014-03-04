@@ -1,3 +1,5 @@
+'use strict';
+function valueFn(value) {return function() {return value;};}
 beforeEach(function() {
 
   function cssMatcher(presentClasses, absentClasses) {
@@ -25,14 +27,14 @@ beforeEach(function() {
 
   function indexOf(array, obj) {
     for ( var i = 0; i < array.length; i++) {
-      if (obj === array[i]) return i;
+      if (obj === array[i]) { return i; }
     }
     return -1;
   }
 
   function isNgElementHidden(element) {
     return angular.element(element).hasClass('ng-hide');
-  };
+  }
 
   this.addMatchers({
     toBeInvalid: cssMatcher('ng-invalid', 'ng-valid'),
@@ -50,47 +52,8 @@ beforeEach(function() {
       return isNgElementHidden(this.actual);
     },
 
-    toEqual: function(expected) {
-      if (this.actual && this.actual.$$log) {
-        this.actual = (typeof expected === 'string')
-            ? this.actual.toString()
-            : this.actual.toArray();
-      }
-      return jasmine.Matchers.prototype.toEqual.call(this, expected);
-    },
-
     to$Equal: function(expected) {
       return angular.equals(this.actual, expected);
-    },
-
-    toEqualData: function(expected) {
-      return angular.equals(this.actual, expected);
-    },
-
-    toEqualError: function(message) {
-      this.message = function() {
-        var expected;
-        if (this.actual.message && this.actual.name == 'Error') {
-          expected = toJson(this.actual.message);
-        } else {
-          expected = toJson(this.actual);
-        }
-        return "Expected " + expected + " to be an Error with message " + toJson(message);
-      };
-      return this.actual.name == 'Error' && this.actual.message == message;
-    },
-
-    toMatchError: function(messageRegexp) {
-      this.message = function() {
-        var expected;
-        if (this.actual.message && this.actual.name == 'Error') {
-          expected = angular.toJson(this.actual.message);
-        } else {
-          expected = angular.toJson(this.actual);
-        }
-        return "Expected " + expected + " to match an Error with message " + angular.toJson(messageRegexp);
-      };
-      return this.actual.name == 'Error' && messageRegexp.test(this.actual.message);
     },
 
     toHaveBeenCalledOnce: function() {
@@ -112,7 +75,7 @@ beforeEach(function() {
         ];
       };
 
-      return this.actual.callCount == 1;
+      return this.actual.callCount === 1;
     },
 
 
@@ -124,8 +87,8 @@ beforeEach(function() {
       }
 
       this.message = function() {
-        if (this.actual.callCount != 1) {
-          if (this.actual.callCount == 0) {
+        if (this.actual.callCount !== 1) {
+          if (this.actual.callCount === 0) {
             return [
               'Expected spy ' + this.actual.identity + ' to have been called once with ' +
                 jasmine.pp(expectedArgs) + ' but it was never called.',
@@ -173,14 +136,10 @@ beforeEach(function() {
   });
 });
 
-
-// TODO(vojta): remove this once Jasmine in Karma gets updated
-// https://github.com/pivotal/jasmine/blob/c40b64a24c607596fa7488f2a0ddb98d063c872a/src/core/Matchers.js#L217-L246
-// This toThrow supports RegExps.
 jasmine.Matchers.prototype.toThrow = function(expected) {
   var result = false;
   var exception, exceptionMessage;
-  if (typeof this.actual != 'function') {
+  if (typeof this.actual !== 'function') {
     throw new Error('Actual is not a function');
   }
   try {
@@ -191,7 +150,7 @@ jasmine.Matchers.prototype.toThrow = function(expected) {
 
   if (exception) {
     exceptionMessage = exception.message || exception;
-    result = (isUndefined(expected) || this.env.equals_(exceptionMessage, expected.message || expected) || (jasmine.isA_("RegExp", expected) && expected.test(exceptionMessage)));
+    result = (angular.isUndefined(expected) || this.env.equals_(exceptionMessage, expected.message || expected) || (jasmine.isA_("RegExp", expected) && expected.test(exceptionMessage)));
   }
 
   var not = this.isNot ? "not " : "";
@@ -214,9 +173,9 @@ jasmine.Matchers.prototype.toThrow = function(expected) {
  * This is helpful when need to spy only setter methods and ignore getters
  */
 function spyOnlyCallsWithArgs(obj, method) {
-  var spy = spyOn(obj, method);
+  var spy = jasmine.spyOn(obj, method);
   obj[method] = function() {
-    if (arguments.length) return spy.apply(this, arguments);
+    if (arguments.length) { return spy.apply(this, arguments); }
     return spy.originalValue.apply(this);
   };
   return spy;
