@@ -25,6 +25,7 @@ $(function(){
 
     }
 
+    return this;
   };
 
   $.fn.ngClickLink = $.fn.$click = function() {
@@ -41,6 +42,8 @@ $(function(){
       element.click();
       $location.path(href);
     }));
+
+    return this;
   };
 
   $.fn.ngTypeOn = $.fn.$type = $.fn.$enter = $.fn.enter = function(string) {
@@ -48,6 +51,7 @@ $(function(){
     this.val(string);
     this.ngBrowserTrigger('input');
 
+    return this;
   };
 
 });
