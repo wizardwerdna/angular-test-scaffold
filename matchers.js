@@ -1,39 +1,27 @@
 'use strict';
 function valueFn(value) {return function() {return value;};}
-
 beforeEach(function() {
 
   function cssMatcher(presentClasses, absentClasses) {
-    return function(util, customEqualityTesters) {
-      return {
-        compare: function(actual, expected) { 
-          var element = angular.element(actual);
-          var present = true;
-          var absent = false;
+    return function() {
+      var element = angular.element(this.actual);
+      var present = true;
+      var absent = false;
 
-          angular.forEach(presentClasses.split(' '), function(className){
-            present = present && element.hasClass(className);
-          });
+      angular.forEach(presentClasses.split(' '), function(className){
+        present = present && element.hasClass(className);
+      });
 
-          angular.forEach(absentClasses.split(' '), function(className){
-            absent = absent || element.hasClass(className);
-          });
+      angular.forEach(absentClasses.split(' '), function(className){
+        absent = absent || element.hasClass(className);
+      });
 
-          var result = {pass: present && !absent}
-
-          if (result.pass) {
-            result.message = "Expected not to have " + presentClasses +
-                (absentClasses ? (" or to have " + absentClasses + "" ) : "") +
-                " but had '" + element[0].className + "'.";
-          } else {
-            result.message = "Expected to have " + presentClasses +
-                (absentClasses ? (" and not have " + absentClasses + "" ) : "") +
-                " but had " + element[0].className + ".";
-          }
-
-          return result;
-        }
+      this.message = function() {
+        return "Expected to have " + presentClasses +
+          (absentClasses ? (" and not have " + absentClasses + "" ) : "") +
+          " but had " + element[0].className + ".";
       };
+      return present && !absent;
     };
   }
 
@@ -48,85 +36,46 @@ beforeEach(function() {
     return angular.element(element).hasClass('ng-hide');
   }
 
-  jasmine.addMatchers({
-    toBeStuffy: function(utils, customEqualityTesters){
-      return {
-        compare: function(actual, expected){
-          var result={pass: undefined};
-          if (result.pass) {
-            result.message = 'not no no no';
-          } else {
-            result.message = 'yes yes yes';
-          }
-          return result;
-        }
-      };
-    },
+  this.addMatchers({
     toBeInvalid: cssMatcher('ng-invalid', 'ng-valid'),
     toBeValid: cssMatcher('ng-valid', 'ng-invalid'),
     toBeDirty: cssMatcher('ng-dirty', 'ng-pristine'),
     toBePristine: cssMatcher('ng-pristine', 'ng-dirty'),
-    toBeShown: function(){
-      return {
-        compare: function(actual){
-          var result={pass: !isNgElementHidden(actual)};
-          if (result.pass) {
-            result.message = "Expected element to have 'ng-hide' class";
-          } else {
-            result.message = "Expected element not to have 'ng-hide' class";
-          }
-          return result;
-        }
-      };
+    toBeShown: function() {
+      this.message = valueFn(
+          "Expected element " + (this.isNot ? "": "not ") + "to have 'ng-hide' class");
+      return !isNgElementHidden(this.actual);
     },
-    toBeHidden: function(){
-      return {
-        compare: function(actual){
-          var result={pass: isNgElementHidden(actual)};
-          if (result.pass) {
-            result.message = "Expected element not to have 'ng-hide' class";
-          } else {
-            result.message = "Expected element to have 'ng-hide' class";
-          }
-          return result;
-        }
-      };
+    toBeHidden: function() {
+      this.message = valueFn(
+          "Expected element " + (this.isNot ? "not ": "") + "to have 'ng-hide' class");
+      return isNgElementHidden(this.actual);
     },
 
-    to$Equal: function() {
-      return {
-        compare: function(actual, expected){
-          return {pass: angular.equals(actual, expected)};
-        }
-      };
+    to$Equal: function(expected) {
+      return angular.equals(this.actual, expected);
     },
 
-    toHaveBeenCalledOnce: function(util) {
-      return {
-        compare: function(actual, expected){
+    toHaveBeenCalledOnce: function() {
+      if (arguments.length > 0) {
+        throw new Error('toHaveBeenCalledOnce does not take arguments, use toHaveBeenCalledWith');
+      }
 
-          if (!jasmine.isSpy(actual)) {
-            return {
-              pass: false,
-              message: 'Expected a spy, but got ' + jasmine.pp(actual) + '.'
-            };
-          }
+      if (!jasmine.isSpy(this.actual)) {
+        throw new Error('Expected a spy, but got ' + jasmine.pp(this.actual) + '.');
+      }
 
-          var count = actual.calls.count();
-
-          var msg = 'Expected spy';
-
-          if (count === 1) { msg += ' not' };
-
-          msg += ' to have been called once, but was';
-          switch(count){
-            case 0: msg += ' never called.'; break;
-            case 1: msg += ' called once.'; break;
-            default: msg += ' called ' + actual.calls.count() + ' times.';
-          }
-          return { pass: count === 1, message: msg };
-        }
+      this.message = function() {
+        var msg = 'Expected spy ' + this.actual.identity + ' to have been called once, but was ',
+            count = this.actual.callCount;
+        return [
+          count === 0 ? msg + 'never called.' :
+                        msg + 'called ' + count + ' times.',
+          msg.replace('to have', 'not to have') + 'called once.'
+        ];
       };
+
+      return this.actual.callCount === 1;
     },
 
 
@@ -182,42 +131,42 @@ beforeEach(function() {
     },
 
     toThrowMatching: function(expected) {
-      /* return jasmine.Matchers.prototype.toThrow.call(this, expected); */
+      return jasmine.Matchers.prototype.toThrow.call(this, expected);
     }
   });
 });
 
-// jasmine.Matchers.prototype.toThrow = function(expected) {
-//   var result = false;
-//   var exception, exceptionMessage;
-//   if (typeof this.actual !== 'function') {
-//     throw new Error('Actual is not a function');
-//   }
-//   try {
-//     this.actual();
-//   } catch (e) {
-//     exception = e;
-//   }
-// 
-//   if (exception) {
-//     exceptionMessage = exception.message || exception;
-//     result = (angular.isUndefined(expected) || this.env.equals_(exceptionMessage, expected.message || expected) || (jasmine.isA_("RegExp", expected) && expected.test(exceptionMessage)));
-//   }
-// 
-//   var not = this.isNot ? "not " : "";
-//   var regexMatch = jasmine.isA_("RegExp", expected) ? " an exception matching" : "";
-// 
-//   this.message = function() {
-//     if (exception) {
-//       return ["Expected function " + not + "to throw" + regexMatch, expected ? expected.message || expected : "an exception", ", but it threw", exceptionMessage].join(' ');
-//     } else {
-//       return "Expected function to throw an exception.";
-//     }
-//   };
-// 
-//   return result;
-// };
-// 
+jasmine.Matchers.prototype.toThrow = function(expected) {
+  var result = false;
+  var exception, exceptionMessage;
+  if (typeof this.actual !== 'function') {
+    throw new Error('Actual is not a function');
+  }
+  try {
+    this.actual();
+  } catch (e) {
+    exception = e;
+  }
+
+  if (exception) {
+    exceptionMessage = exception.message || exception;
+    result = (angular.isUndefined(expected) || this.env.equals_(exceptionMessage, expected.message || expected) || (jasmine.isA_("RegExp", expected) && expected.test(exceptionMessage)));
+  }
+
+  var not = this.isNot ? "not " : "";
+  var regexMatch = jasmine.isA_("RegExp", expected) ? " an exception matching" : "";
+
+  this.message = function() {
+    if (exception) {
+      return ["Expected function " + not + "to throw" + regexMatch, expected ? expected.message || expected : "an exception", ", but it threw", exceptionMessage].join(' ');
+    } else {
+      return "Expected function to throw an exception.";
+    }
+  };
+
+  return result;
+};
+
 
 /**
  * Create jasmine.Spy on given method, but ignore calls without arguments
